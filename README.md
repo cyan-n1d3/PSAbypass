@@ -9,6 +9,8 @@ For other shortlink use:
 
 ## Installation
 
-[Click here](https://github.com/faridzfr/PSAbypass/raw/refs/heads/main/psabypass.user.js) to install or click file in repo - raw.
+[Click here](https://github.com/faridzfr/PSAbypass/raw/refs/heads/main/psa.wf%20bypass%20shorlink-1.0.user.js) to install or click file in repo - raw.
 
-**Require Tampermonkey** to install userscript
+**Require Tampermonkey/Violentmonkey** to install userscript
+
+
