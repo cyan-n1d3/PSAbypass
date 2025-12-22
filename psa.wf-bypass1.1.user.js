@@ -126,12 +126,21 @@
   if (host.includes('cashgrowth.online')) {
     say('success');
     try {
-      Object.defineProperty(document, 'hidden', { value: false });
-      Object.defineProperty(document, 'visibilityState', { value: 'visible' });
-      Object.defineProperty(document, 'hasFocus', { value: () => true });
+        Object.defineProperty(document, 'hidden', { value: false });
+        Object.defineProperty(document, 'visibilityState', { value: 'visible' });
+        Object.defineProperty(document, 'hasFocus', { value: () => true });
     } catch (err) {
-      console.warn('fail', err);
+        console.warn('fail', err);
     }
+
+    // auto click delete session button
+    const loop = setInterval(() => {
+        const btn = document.getElementById('delete-session-btn');
+        if (btn) {
+            say('delete session');
+            btn.click();
+        }
+    }, 500);
     return;
   }
 
