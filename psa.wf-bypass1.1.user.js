@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.2
+// @version      1.3
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -132,6 +132,33 @@
     } catch (err) {
         console.warn('fail', err);
     }
+
+    // redirect manual mode
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+        const response = await originalFetch(...args);
+        
+        try {
+            const url = args[0] instanceof Request ? args[0].url : args[0];
+            if (url && typeof url === 'string' && url.includes('/api/session/')) {
+                const clone = response.clone();
+                clone.json().then(data => {
+                    if (data.redirect) {
+                        console.log('redirect:', data.redirect);
+                        location.replace(data.redirect);
+                    } 
+                    else if (data.data && data.data.finalRedirect) {
+                         console.log('final redirect:', data.data.finalRedirect);
+                         location.replace(data.data.finalRedirect);
+                    }
+                }).catch(e => console.error('JSON parse error', e));
+            }
+        } catch (e) {
+            console.error('error', e);
+        }
+        
+        return response;
+    };
 
     // auto click delete session button
     const loop = setInterval(() => {
