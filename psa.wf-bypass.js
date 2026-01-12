@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.4
+// @version      1.6
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -13,6 +13,8 @@
 // @icon64       https://psa.wf/favicon.ico
 // @match        *://cashgrowth.online/*
 // @match        *://*.ravellawfirm.com/*
+// @match        https://exe.io/*
+// @match        https://exe-links.com/*
 // @match        *://psa.wf/goto/*
 // @match        *://go2.pics/go2*
 // @match        *://get-to.link/*
@@ -205,6 +207,48 @@
       }
     }, lim.ravGap);
 
+    return;
+  }
+
+  // exe.io & exe-links.com
+  if (/exe\.io|exe-links\.com/.test(host)) {
+    say('exe');
+    window.open = () => {};
+    const OSI = setInterval;
+    window.setInterval = (f, t, ...a) => OSI(f, t === 1e3 ? 100 : t, ...a);
+
+    const XHR = XMLHttpRequest.prototype, open = XHR.open, send = XHR.send, set = XHR.setRequestHeader;
+    XHR.open = function(m, u) { this._u = u; this._h = {}; return open.apply(this, arguments); };
+    XHR.setRequestHeader = function(k, v) { this._h[k] = v; return set.apply(this, arguments); };
+    XHR.send = function(b) {
+      this.addEventListener('load', () => {
+        if (this._u && this._u.includes('/links/go')) {
+          try {
+            const r = JSON.parse(this.responseText);
+            if (r.url) location.href = r.url;
+            else if (r.message) fetch(this._u, { method: 'POST', headers: { ...this._h, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: b })
+              .then(x => x.json()).then(d => d.url && (location.href = d.url));
+          } catch (e) {}
+        }
+      });
+      return send.apply(this, arguments);
+    };
+
+    OSI(() => {
+      const b = document.querySelector('#before-captcha .button, button.link-button');
+      if (b && b.innerText.includes("Continue")) b.click();
+      const c = document.querySelector('#g-recaptcha-response');
+      if (c && c.value.length > 20) (document.getElementById('link-view') || document.forms[0]).submit();
+    }, 500);
+    return;
+  }
+
+  // recaptcha
+  if (/google\.com|recaptcha\.net/.test(host)) {
+    setInterval(() => {
+      const b = document.querySelector('.recaptcha-checkbox-border');
+      if (b && !b.classList.contains('recaptcha-checkbox-checked')) b.click();
+    }, 1000);
     return;
   }
 
