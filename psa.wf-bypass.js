@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.7
+// @version      1.8
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -15,6 +15,11 @@
 // @match        *://*.ravellawfirm.com/*
 // @match        *://exe.io/*
 // @match        *://exe-links.com/*
+// @match        *://mtc1.theglobaldiary.com/*
+// @match        *://mtc2.gkvpyqs.com/*
+// @match        *://*.theglobaldiary.com/*
+// @match        *://*.gkvpyqs.com/*
+// @match        *://shortxlinks.com/*
 // @match        *://psa.wf/goto/*
 // @match        *://go2.pics/go2*
 // @match        *://get-to.link/*
@@ -250,6 +255,63 @@
       if (b && !b.classList.contains('recaptcha-checkbox-checked')) b.click();
     }, 1000);
     return;
+  }
+
+// shortxlinks (mtc1/mtc2)
+  if (/mtc\d|theglobaldiary|gkvpyqs/.test(host)) {
+    let check = setInterval(() => {
+      const d = s => { try { return JSON.parse(atob(s)); } catch (e) {} };
+      const p = new URLSearchParams(location.search).get('safelink_redirect');
+      
+      // MTC2 (Direct redirect)
+      if (p) {
+        const res = d(p);
+        if (res && res.safelink) { clearInterval(check); location.href = res.safelink; }
+      } 
+      // MTC1 (Wait & Skip)
+      else {
+        const e = document.getElementById('value') || document.querySelector('input[name="newwpsafelink"]');
+        const v = e ? e.value : window.ad_mem;
+        
+        if (v && document.body) {
+          clearInterval(check);
+          const j = d(v);
+          if (j && j.linkr) {
+            let u = j.linkr, t = (parseInt(j.delay) || 25) + 2; // safest way to not flagged as bot
+            try { u = d(new URL(u).searchParams.get('safelink_redirect')).safelink || u; } catch (e) {}
+            
+            let c = document.createElement('div');
+            Object.assign(c.style, {position:'fixed',top:'300px',left:'50%',transform:'translateX(-50%)',zIndex:'2147483647',background:'#b21d1dff',color:'#fff',padding:'10px',fontSize:'14px',textAlign:'center'});
+            document.body.appendChild(c);
+            
+            let i = setInterval(() => {
+              c.innerText = `Redirecting in ${t--}s...`;
+              if (t < 0) { clearInterval(i); location.href = u; }
+            }, 1000);
+          }
+        }
+      }
+    }, 500); // Check every 0.5s
+    return;
+  }
+
+  // shortxlinks final redirect
+  if (host.includes('shortxlinks')) {
+    const X = XMLHttpRequest.prototype;
+    const o = X.open;
+    const s = X.send;
+    X.open = function(m, u) { this._u = u; return o.apply(this, arguments); };
+    X.send = function(b) {
+      this.addEventListener('load', () => {
+        try {
+          if (this._u && this._u.includes('/links/go')) {
+            const r = JSON.parse(this.responseText);
+            if (r.url) location.href = r.url;
+          }
+        } catch (e) {}
+      });
+      return s.apply(this, arguments);
+    };
   }
 
   if (host === 'get-to.link') {
