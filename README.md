@@ -6,6 +6,7 @@ bypass list:
 - cashgrowth.online
 - exe-links.com
 - shortxlink.com/mtc1/mtc2
+- shrinkme.click
 
 For other shortlink use:  
 **[bypass-all-shortlinks-debloated](https://codeberg.org/Amm0ni4/bypass-all-shortlinks-debloated)** by Amm0ni4

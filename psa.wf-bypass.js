@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.8
+// @version      1.9
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -20,6 +20,10 @@
 // @match        *://*.theglobaldiary.com/*
 // @match        *://*.gkvpyqs.com/*
 // @match        *://shortxlinks.com/*
+// @match        *://*.shrinkme.click/*
+// @match        *://*.themezon.net/*
+// @match        *://*.en.mrproblogger.com/*
+// @match        *://*.mrproblogger.com/*
 // @match        *://psa.wf/goto/*
 // @match        *://go2.pics/go2*
 // @match        *://get-to.link/*
@@ -40,6 +44,7 @@
 
   const say = (...msg) => console.log('[Bypass]', ...msg);
 
+  //== helpers
   function b64(v) {
     if (!v) return null;
     try {
@@ -84,6 +89,7 @@
     }
   }
 
+  //== start here
   // psa.wf auto redirect
   if (host === 'psa.wf' && location.pathname.startsWith('/goto/')) {
     say('detected');
@@ -129,6 +135,7 @@
     return;
   }
 
+  //== cashgrowth
   // cashgrowth bypass
   if (host.includes('cashgrowth.online')) {
     say('success');
@@ -215,6 +222,7 @@
     return;
   }
 
+  //== exe.io
   // exe.io & exe-links.com
   if (/exe\.io|exe-links\.com/.test(host)) {
     say('exe');
@@ -257,7 +265,8 @@
     return;
   }
 
-// shortxlinks (mtc1/mtc2)
+  //== shortxlinks
+  // shortxlinks (mtc1/mtc2)
   if (/mtc\d|theglobaldiary|gkvpyqs/.test(host)) {
     let check = setInterval(() => {
       const d = s => { try { return JSON.parse(atob(s)); } catch (e) {} };
@@ -314,8 +323,76 @@
     };
   }
 
+//== shrinkme
+  // shrinkme
+  if (/shrinkme\.click/.test(host)) {
+    say('shrinkme');
+    const t = setInterval(() => {
+      const v = document.getElementById('div-human-verification');
+      if (v && v.dataset.link) { clearInterval(t); location.href = 'https://themezon.net/link.php?link=' + v.dataset.link; }
+    }, 500);
+    return;
+  }
+
+  // themezon
+  if (/themezon\.net/.test(host)) {
+    say('themezon');
+    const t = setInterval(() => {
+      const v = document.querySelector('input[name="newwpsafelink"]');
+      const n = document.querySelector('#nextPage a');
+      if (v) {
+        clearInterval(t);
+        const f = document.createElement('form');
+        f.method = 'POST'; f.action = '/?redirect_to=random';
+        const h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'newwpsafelink'; h.value = v.value;
+        f.appendChild(h); document.body.appendChild(f); f.submit();
+      } else if (n) {
+        clearInterval(t); location.href = n.href;
+      }
+    }, 500);
+    return;
+  }
+
+  // mrproblogger
+  if (/mrproblogger\.com/.test(host)) {
+    say('mrproblogger');
+    const XHR = XMLHttpRequest.prototype;
+    const open = XHR.open;
+    const send = XHR.send;
+    XHR.open = function(method, url) {
+        this._u = url;
+        return open.apply(this, arguments);
+    };
+    XHR.send = function(postData) {
+        this.addEventListener('load', () => {
+            if (this._u && this._u.includes('/links/go')) {
+                try {
+                    const r = JSON.parse(this.responseText);
+                    if (r.url) location.href = r.url;
+                } catch(e) {}
+            }
+        });
+        return send.apply(this, arguments);
+    };
+
+    const t = setInterval(() => {
+      const b = document.querySelector('a.get-link, #btn-get-link, #get-link-btn, button#go-submit');
+      if (b && b.offsetParent && !b.disabled) { clearInterval(t); b.click(); }
+    }, 1000);
+    return;
+  }
+
+  // get-to.link
   if (host === 'get-to.link') {
     say('tada');
+    const t = setInterval(() => {
+        const b = document.querySelector('a.btn.btn-primary, a.btn.btn-secondary, a.get-link');
+        if (b && b.href && b.href.startsWith('http')) { 
+            clearInterval(t); 
+            location.href = b.href; 
+        }
+    }, 500);
     return;
   }
 })();
