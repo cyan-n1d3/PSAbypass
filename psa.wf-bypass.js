@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9
+// @version      1.9.1
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -15,8 +15,10 @@
 // @match        *://*.ravellawfirm.com/*
 // @match        *://exe.io/*
 // @match        *://exe-links.com/*
-// @match        *://mtc1.theglobaldiary.com/*
-// @match        *://mtc2.gkvpyqs.com/*
+// @match        *://mtc1.*.*/*
+// @match        *://mtc1.*.*
+// @match        *://mtc2.*.*/*
+// @match        *://mtc2.*.*
 // @match        *://*.theglobaldiary.com/*
 // @match        *://*.gkvpyqs.com/*
 // @match        *://shortxlinks.com/*
