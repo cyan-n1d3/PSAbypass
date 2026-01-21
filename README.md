@@ -4,11 +4,11 @@ Bypass psa.wf, solve captcha manually, let userscript handle the rest.
 
 bypass list: 
 - cashgrowth.online
-- exe-links.com
+- exe-links.com 
 - shortxlink.com/mtc1/mtc2 
 - shrinkme.click
 - fc.lc
-- shrtslug.biz (WIP/not implemented yet)
+- shrtslug.biz 
 
 For other shortlink use:  
 **[bypass-all-shortlinks-debloated](https://codeberg.org/Amm0ni4/bypass-all-shortlinks-debloated)** by Amm0ni4

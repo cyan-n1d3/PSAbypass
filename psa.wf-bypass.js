@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.2
+// @version      1.9.3
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -13,6 +13,7 @@
 // @match        *://cashgrowth.online/*
 // @match        *://*.ravellawfirm.com/*
 // @match        *://exe.io/*
+// @match        *://exe-links.com/*
 // @include      /^https?:\/\/mtc1\./
 // @include      /^https?:\/\/mtc2\./
 // @match        *://shortxlinks.com/*
@@ -23,6 +24,12 @@
 // @match        *://fc-lc.xyz/*
 // @match        *://fc.lc/*
 // @match        *://jobzhub.store/*
+// @match        *://shrtslug.biz/*
+// @match        *://digiztechno.com/*
+// @match        *://tournguide.com/*
+// @match        *://techmize.net/*
+// @match        *://technons.com/*
+// @match        *://yrtourguide.com/*
 // @match        *://psa.wf/goto/*
 // @match        *://go2.pics/go2*
 // @match        *://get-to.link/*
@@ -246,7 +253,16 @@
       return send.apply(this, arguments);
     };
 
+    let a = false;
     OSI(() => {
+      if (!a && document.body) {
+        let c = document.createElement('div');
+        Object.assign(c.style, {position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff',padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold'});
+        c.innerText = 'Solve captcha manual';
+        document.body.appendChild(c);
+        a = true;
+      }
+
       const b = document.querySelector('#before-captcha .button, button.link-button');
       if (b && b.innerText.includes("Continue")) b.click();
       const c = document.querySelector('#g-recaptcha-response');
@@ -394,7 +410,16 @@
   //== fc.lc
   if (/fc-lc|fc\.lc|jobzhub/.test(host)) {
     say('fc.lc');
+    let a = false;
     const t = setInterval(() => {
+      if (!a && document.body) {
+        let c = document.createElement('div');
+        Object.assign(c.style, {position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff',padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold'});
+        c.innerText = 'Solve captcha manual';
+        document.body.appendChild(c);
+        a = true;
+      }
+
       const b = document.getElementById('invisibleCaptchaShortlink');
       const c = document.querySelector('textarea[name="h-captcha-response"]') || document.querySelector('textarea[name="g-recaptcha-response"]');
       
@@ -417,6 +442,28 @@
       const f12 = document.getElementById('form12');
       if (f12) { clearInterval(t); fetch('https://fc.lc/links/go', { method: 'POST', body: new FormData(f12) }).then(r => r.json()).then(d => { if (d.url) location.href = d.url; }); }
     }, 500);
+    return;
+  }
+
+  //== shrtslug and others
+  // shrtslug / digiztechno / tournguide / techmize / technons
+  if (/shrtslug|digiztechno|tournguide|techmize|technons|yrtourguide/.test(host)) {
+    say('shrtslug');
+    const t = setInterval(() => {
+      const f = document.querySelector('div[id$="_final"] a, div[id$="_final"] button');
+      if (f && f.offsetParent) { clearInterval(t); f.click(); return; }
+
+      const btns = document.querySelectorAll('button, a.btn, input[type="submit"]');
+      for (let b of btns) {
+        if (b.offsetParent && !b.disabled) {
+          const txt = (b.innerText || b.value || '').toLowerCase();
+          if (/verify|proceed|get link/.test(txt)) {
+            b.click();
+            break; 
+          }
+        }
+      }
+    }, 3000); // 3s sleep
     return;
   }
 
