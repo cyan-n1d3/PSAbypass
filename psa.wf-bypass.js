@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.1
+// @version      1.9.2
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -10,22 +10,19 @@
 // @updateURL    https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @downloadURL  https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @icon         https://psa.wf/favicon.ico
-// @icon64       https://psa.wf/favicon.ico
 // @match        *://cashgrowth.online/*
 // @match        *://*.ravellawfirm.com/*
 // @match        *://exe.io/*
-// @match        *://exe-links.com/*
-// @match        *://mtc1.*.*/*
-// @match        *://mtc1.*.*
-// @match        *://mtc2.*.*/*
-// @match        *://mtc2.*.*
-// @match        *://*.theglobaldiary.com/*
-// @match        *://*.gkvpyqs.com/*
+// @include      /^https?:\/\/mtc1\./
+// @include      /^https?:\/\/mtc2\./
 // @match        *://shortxlinks.com/*
 // @match        *://*.shrinkme.click/*
 // @match        *://*.themezon.net/*
 // @match        *://*.en.mrproblogger.com/*
 // @match        *://*.mrproblogger.com/*
+// @match        *://fc-lc.xyz/*
+// @match        *://fc.lc/*
+// @match        *://jobzhub.store/*
 // @match        *://psa.wf/goto/*
 // @match        *://go2.pics/go2*
 // @match        *://get-to.link/*
@@ -269,7 +266,7 @@
 
   //== shortxlinks
   // shortxlinks (mtc1/mtc2)
-  if (/mtc\d|theglobaldiary|gkvpyqs/.test(host)) {
+  if (/mtc\d/.test(host)) {
     let check = setInterval(() => {
       const d = s => { try { return JSON.parse(atob(s)); } catch (e) {} };
       const p = new URLSearchParams(location.search).get('safelink_redirect');
@@ -292,7 +289,7 @@
             try { u = d(new URL(u).searchParams.get('safelink_redirect')).safelink || u; } catch (e) {}
             
             let c = document.createElement('div');
-            Object.assign(c.style, {position:'fixed',top:'300px',left:'50%',transform:'translateX(-50%)',zIndex:'2147483647',background:'#b21d1dff',color:'#fff',padding:'10px',fontSize:'14px',textAlign:'center'});
+            Object.assign(c.style, {position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px'});
             document.body.appendChild(c);
             
             let i = setInterval(() => {
@@ -325,7 +322,7 @@
     };
   }
 
-//== shrinkme
+  //== shrinkme
   // shrinkme
   if (/shrinkme\.click/.test(host)) {
     say('shrinkme');
@@ -378,10 +375,48 @@
         return send.apply(this, arguments);
     };
 
+    let a = false;
     const t = setInterval(() => {
+      if (!a && document.body) {
+          let c = document.createElement('div');
+          Object.assign(c.style, {position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px'});
+          c.innerText = 'WAIT FOR COUNTDOWN';
+          document.body.appendChild(c);
+          a = true;
+      }
+
       const b = document.querySelector('a.get-link, #btn-get-link, #get-link-btn, button#go-submit');
       if (b && b.offsetParent && !b.disabled) { clearInterval(t); b.click(); }
     }, 1000);
+    return;
+  }
+
+  //== fc.lc
+  if (/fc-lc|fc\.lc|jobzhub/.test(host)) {
+    say('fc.lc');
+    const t = setInterval(() => {
+      const b = document.getElementById('invisibleCaptchaShortlink');
+      const c = document.querySelector('textarea[name="h-captcha-response"]') || document.querySelector('textarea[name="g-recaptcha-response"]');
+      
+      if (b && c) {
+        if (c.value.length > 10) {
+            clearInterval(t);
+            say('Captcha solved, submitting');
+            b.disabled = 0;
+            b.click();
+        }
+        return; 
+      }
+
+      const m = document.documentElement.innerHTML.match(/REDIRECT_URL\s*=\s*"([^"]+)"/);
+      if (m) { clearInterval(t); location.replace(m[1]); return; }
+
+      const f = document.querySelector('input[name="fdata"]');
+      if (f) { clearInterval(t); fetch('?start_countdown=1').then(r => r.json()).then(d => { f.value = d.rand; f.closest('form').submit(); }); return; }
+
+      const f12 = document.getElementById('form12');
+      if (f12) { clearInterval(t); fetch('https://fc.lc/links/go', { method: 'POST', body: new FormData(f12) }).then(r => r.json()).then(d => { if (d.url) location.href = d.url; }); }
+    }, 500);
     return;
   }
 
