@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.3
+// @version      1.10.0
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -142,89 +142,50 @@
   }
 
   //== cashgrowth
-  // cashgrowth bypass
-  if (host.includes('cashgrowth.online')) {
-    say('success');
+  if (/cashgrowth\.online/.test(host)) {
+    say('cashgrowth');
     try {
-        Object.defineProperty(document, 'hidden', { value: false });
-        Object.defineProperty(document, 'visibilityState', { value: 'visible' });
-        Object.defineProperty(document, 'hasFocus', { value: () => true });
-    } catch (err) {
-        console.warn('fail', err);
-    }
+      Object.defineProperty(document, 'hidden', { value: false });
+      Object.defineProperty(document, 'visibilityState', { value: 'visible' });
+      Object.defineProperty(document, 'hasFocus', { value: () => true });
+    } catch (e) {}
 
-    // redirect manual mode
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        const response = await originalFetch(...args);
-        
-        try {
-            const url = args[0] instanceof Request ? args[0].url : args[0];
-            if (url && typeof url === 'string' && url.includes('/api/session/')) {
-                const clone = response.clone();
-                clone.json().then(data => {
-                    if (data.redirect) {
-                        console.log('redirect:', data.redirect);
-                        location.replace(data.redirect);
-                    } 
-                    else if (data.data && data.data.finalRedirect) {
-                         console.log('final redirect:', data.data.finalRedirect);
-                         location.replace(data.data.finalRedirect);
-                    }
-                }).catch(e => console.error('JSON parse error', e));
-            }
-        } catch (e) {
-            console.error('error', e);
+    const orig = window.fetch;
+    window.fetch = async (...args) => {
+      const r = await orig(...args);
+      try {
+        const u = args[0] instanceof Request ? args[0].url : args[0];
+        if (typeof u === 'string' && u.includes('/api/session/')) {
+          r.clone().json().then(d => {
+            const red = d.redirect || (d.data && d.data.finalRedirect);
+            if (red) { say('redirect'); location.replace(red); }
+          }).catch(() => {});
         }
-        
-        return response;
+      } catch (e) {}
+      return r;
     };
 
-    // auto click delete session button
-    const loop = setInterval(() => {
-        const btn = document.getElementById('delete-session-btn');
-        if (btn) {
-            say('delete session');
-            btn.click();
-        }
+    setInterval(() => {
+      const b = document.getElementById('delete-session-btn');
+      if (b) b.click();
     }, 500);
     return;
   }
 
-  // ravellawfirm redirect
-  if (host.includes('ravellawfirm.com')) {
-    say('ok');
-
-    function getDest() {
-      for (const island of document.querySelectorAll('astro-island')) {
-        const prop = island.getAttribute('props');
-        if (!prop || !prop.includes('finalDestination')) continue;
-        const m = prop.match(/"finalDestination":\[\d+,"([^"]+)"\]/);
-        if (m) return m[1];
-      }
-      return null;
-    }
-
-    let cnt = 0;
+  // ravellawfirm
+  if (/ravellawfirm\.com/.test(host)) {
+    say('ravellawfirm');
     const t = setInterval(() => {
-      cnt++;
-      const dest = getDest();
-      if (!dest && cnt < lim.ravTry) return;
-
-      clearInterval(t);
-      if (!dest) {
-        say('fail');
-        return;
+      const el = [...document.querySelectorAll('astro-island')].find(e => (e.getAttribute('props') || '').includes('finalDestination'));
+      if (el) {
+        const m = el.getAttribute('props').match(/"finalDestination":\[\d+,"([^"]+)"\]/);
+        if (m && m[1]) {
+          clearInterval(t);
+          say('redirect', m[1]);
+          location.replace(m[1]);
+        }
       }
-
-      say('final', dest);
-      if (isGo2(dest)) {
-        go2Chain(dest);
-      } else {
-        location.replace(dest);
-      }
-    }, lim.ravGap);
-
+    }, 500);
     return;
   }
 
