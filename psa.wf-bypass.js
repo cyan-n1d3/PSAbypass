@@ -141,9 +141,9 @@
     return;
   }
 
-  //== cashgrowth
-  if (/cashgrowth\.online/.test(host)) {
-    say('cashgrowth');
+  //== cashgrowth / ravellawfirm
+  if (/cashgrowth\.online|ravellawfirm\.com/.test(host)) {
+    say('cashgrowth/ravel');
     try {
       Object.defineProperty(document, 'hidden', { value: false });
       Object.defineProperty(document, 'visibilityState', { value: 'visible' });
@@ -165,17 +165,12 @@
       return r;
     };
 
-    setInterval(() => {
+    const t = setInterval(() => {
+      // Auto-click delete session
       const b = document.getElementById('delete-session-btn');
       if (b) b.click();
-    }, 500);
-    return;
-  }
 
-  // ravellawfirm
-  if (/ravellawfirm\.com/.test(host)) {
-    say('ravellawfirm');
-    const t = setInterval(() => {
+      // Ravellawfirm
       const el = [...document.querySelectorAll('astro-island')].find(e => (e.getAttribute('props') || '').includes('finalDestination'));
       if (el) {
         const m = el.getAttribute('props').match(/"finalDestination":\[\d+,"([^"]+)"\]/);
