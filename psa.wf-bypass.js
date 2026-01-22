@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.4
+// @version      1.9.5
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -269,6 +269,11 @@
       if (b && b.innerText.includes("Continue")) b.click();
       const c = document.querySelector('#g-recaptcha-response');
       if (c && c.value.length > 20) (document.getElementById('link-view') || document.forms[0]).submit();
+
+      const btn = document.getElementById('invisibleCaptchaShortlink');
+      if (btn && !btn.disabled) {
+        btn.click();
+      }
     }, 500);
     return;
   }
@@ -462,7 +467,7 @@
       if (f && f.offsetParent) { clearInterval(t); f.click(); return; }
 
       document.querySelectorAll('button, a.btn, input[type="submit"]').forEach(b => {
-        if (b.offsetParent && !b.disabled && /verify|proceed|get link/i.test(b.innerText || b.value)) b.click();
+        if (b.offsetParent && !b.disabled && /verify|proceed|get link|open|begin|start/i.test(b.innerText || b.value)) b.click();
       });
     }, 3000);
     return;
