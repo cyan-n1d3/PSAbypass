@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.3
+// @version      1.9.4
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -30,6 +30,8 @@
 // @match        *://techmize.net/*
 // @match        *://technons.com/*
 // @match        *://yrtourguide.com/*
+// @match        *://oii.la/*
+// @match        *://tpi.li/*
 // @match        *://psa.wf/goto/*
 // @match        *://go2.pics/go2*
 // @match        *://get-to.link/*
@@ -449,21 +451,39 @@
   // shrtslug / digiztechno / tournguide / techmize / technons
   if (/shrtslug|digiztechno|tournguide|techmize|technons|yrtourguide/.test(host)) {
     say('shrtslug');
+    let s = document.createElement('style');
+    s.innerHTML = '#warning_area{display:none!important}#main_area{display:block!important}';
+    document.head.appendChild(s);
+    try { Object.defineProperty(window, 'abwn', {value:()=>{}, writable:false}); } catch(e){}
+    new MutationObserver(m => m.forEach(n => { if(n.addedNodes[0]?.id==='main_area') n.addedNodes[0].remove=()=>{}; })).observe(document, {childList:true, subtree:true});
+
     const t = setInterval(() => {
-      const f = document.querySelector('div[id$="_final"] a, div[id$="_final"] button');
+      let f = document.querySelector('div[id$="_final"] a, div[id$="_final"] button');
       if (f && f.offsetParent) { clearInterval(t); f.click(); return; }
 
-      const btns = document.querySelectorAll('button, a.btn, input[type="submit"]');
-      for (let b of btns) {
-        if (b.offsetParent && !b.disabled) {
-          const txt = (b.innerText || b.value || '').toLowerCase();
-          if (/verify|proceed|get link/.test(txt)) {
-            b.click();
-            break; 
-          }
+      document.querySelectorAll('button, a.btn, input[type="submit"]').forEach(b => {
+        if (b.offsetParent && !b.disabled && /verify|proceed|get link/i.test(b.innerText || b.value)) b.click();
+      });
+    }, 3000);
+    return;
+  }
+
+  //== tpi.li, oii.la
+  if (/tpi\.li|oii\.la/.test(host)) {
+    say('tpi.li');
+    const t = setInterval(() => {
+      let m = document.documentElement.innerHTML.match(/aHR0c[a-zA-Z0-9+/=]+(?<!=)/);
+      if (m) {
+        let d = atob(m[0]);
+        if (d.includes('http') && !d.includes(location.hostname)) { 
+            clearInterval(t); location.href = d; return; 
         }
       }
-    }, 3000); // 3s sleep
+
+      let c = document.querySelector('input[name="cf-turnstile-response"]'),
+          b = document.querySelector('#continue, button[type="submit"]');
+      if (c && c.value && b) { clearInterval(t); b.click(); }
+    }, 500);
     return;
   }
 
