@@ -12,7 +12,7 @@ bypass list:
 - tpi.li, oii.la (reimplement from bypass-all-shortlinks-debloated)
 
 For other shortlink use:  
-**[bypass-all-shortlinks-debloated](https://codeberg.org/Amm0ni4/bypass-all-shortlinks-debloated)** by Amm0ni4 or **[New active maintain Fork](https://codeberg.org/gongchandang49/bypass-all-shortlinks-debloated)** by gongchandang49
+**[bypass-all-shortlinks-debloated](https://codeberg.org/Amm0ni4/bypass-all-shortlinks-debloated)** by Amm0ni4 or **[bypass-all-shortlinks-debloated Fork](https://codeberg.org/gongchandang49/bypass-all-shortlinks-debloated)** by gongchandang49
 
 
 
