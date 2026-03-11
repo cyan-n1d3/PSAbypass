@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.5
+// @version      1.9.7
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -10,31 +10,15 @@
 // @updateURL    https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @downloadURL  https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @icon         https://psa.wf/favicon.ico
-// @match        *://cashgrowth.online/*
-// @match        *://*.ravellawfirm.com/*
-// @match        *://exe.io/*
-// @match        *://exe-links.com/*
-// @include      /^https?:\/\/mtc1\./
-// @include      /^https?:\/\/mtc2\./
-// @match        *://shortxlinks.com/*
-// @match        *://*.shrinkme.click/*
-// @match        *://*.themezon.net/*
-// @match        *://*.en.mrproblogger.com/*
-// @match        *://*.mrproblogger.com/*
-// @match        *://fc-lc.xyz/*
-// @match        *://fc.lc/*
-// @match        *://jobzhub.store/*
-// @match        *://shrtslug.biz/*
-// @match        *://digiztechno.com/*
-// @match        *://tournguide.com/*
-// @match        *://techmize.net/*
-// @match        *://technons.com/*
-// @match        *://yrtourguide.com/*
-// @match        *://oii.la/*
-// @match        *://tpi.li/*
-// @match        *://psa.wf/goto/*
-// @match        *://go2.pics/go2*
-// @match        *://get-to.link/*
+// @include      /^https?:\/\/(.*\.)?(cashgrowth\.online|ravellawfirm\.com)/
+// @include      /^https?:\/\/(.*\.)?(exe\.io|exe-links\.com)/
+// @include      /^https?:\/\/(mtc\d\.|shortxlinks\.com)/
+// @include      /^https?:\/\/(.*\.)?(shrinkme\.click|themezon\.net|mrproblogger\.com)/
+// @include      /^https?:\/\/(.*\.)?(fc-lc\.xyz|fc\.lc|jobzhub\.store)/
+// @include      /^https?:\/\/(.*\.)?(shrtslug\.biz|digiztechno\.com|tournguide\.com|yrtourguide\.com|techmize\.net|technons\.com)/
+// @include      /^https?:\/\/(.*\.)?(tpi\.li|oii\.la)/
+// @include      /^https?:\/\/(.*\.)?(bitcotrade\.net|mobiend\.com|adurl\.io)/
+// @include      /^https?:\/\/(psa\.wf\/goto\/|go2\.pics\/go2|get-to\.link)/
 // @run-at       document-start
 // ==/UserScript==
 
@@ -469,7 +453,7 @@
       document.querySelectorAll('button, a.btn, input[type="submit"]').forEach(b => {
         if (b.offsetParent && !b.disabled && /verify|proceed|get link|open|begin|start/i.test(b.innerText || b.value)) b.click();
       });
-    }, 3000);
+    }, 1000);
     return;
   }
 
@@ -488,6 +472,41 @@
       let c = document.querySelector('input[name="cf-turnstile-response"]'),
           b = document.querySelector('#continue, button[type="submit"]');
       if (c && c.value && b) { clearInterval(t); b.click(); }
+    }, 500);
+    return;
+  }
+
+  //== bitcotrade, mobiend, adurl
+  if (/bitcotrade\.net|mobiend\.com|adurl\.io/.test(host)) {
+    say('bitcotrade');
+    const X = XMLHttpRequest.prototype, o = X.open, s = X.send;
+    let a = false, c;
+    X.open = function(m, u) { this._u = u; return o.apply(this, arguments); };
+    X.send = function(b) {
+      this.addEventListener('load', () => {
+        if (this._u && this._u.includes('/links/go')) {
+          try {
+            const r = JSON.parse(this.responseText);
+            if (r.url) location.href = r.url;
+          } catch(e) {}
+        }
+      });
+      return s.apply(this, arguments);
+    };
+    const t = setInterval(() => {
+      const btn = document.getElementById('go_d');
+      if (btn && btn.href) {
+        clearInterval(t);
+        say('redirecting');
+        location.href = btn.href;
+      }
+      if (/adurl\.io/.test(host) && !a && document.body) {
+        c = document.createElement('div');
+        Object.assign(c.style, {position:'fixed', top:'300px', left:'50%', transform:'translateX(-50%)', zIndex:'2147483647', background:'#b21d1dff', color:'#fff', padding:'10px', fontSize:'24px', textAlign:'center', fontWeight:'bold', borderRadius:'4px'});
+        c.innerText = 'WAIT FOR COUNTDOWN';
+        document.body.appendChild(c);
+        a = true; clearInterval(t); 
+      }
     }, 500);
     return;
   }
