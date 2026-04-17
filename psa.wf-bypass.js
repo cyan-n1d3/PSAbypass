@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.8
+// @version      1.9.9
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -18,7 +18,7 @@
 // @include      /^https?:\/\/(.*\.)?(shrtslug\.biz|digiztechno\.com|tournguide\.com|yrtourguide\.com|techmize\.net|technons\.com|biovetro\.net|dailyjobposting\.xyz)/
 // @include      /^https?:\/\/(.*\.)?(tpi\.li|oii\.la)/
 // @include      /^https?:\/\/(.*\.)?(bitcotrade\.net|mobiend\.com|adurl\.io)/
-// @include      /^https?:\/\/(psa\.wf\/goto\/|go2\.pics\/go2|get-to\.link)/
+// @include      /^https?:\/\/(psa\.wf\/goto\/|go2\.pics\/go2|get-to\.link|uiil\.ink)/
 // @run-at       document-start
 // ==/UserScript==
 
@@ -510,6 +510,31 @@
         a = true; clearInterval(t);
       }
     }, 500);
+    return;
+  }
+
+  //== uiil.ink
+  if (host.includes('uiil.ink')) {
+    say('uiil');
+    window.open = () => { };
+    const t = setInterval(() => {
+      const c = document.querySelector('input[name="cf-turnstile-response"]');
+      const b = document.getElementById('invisibleCaptchaShortlink');
+      if (c && c.value && b && !b.disabled) b.click();
+
+      const f = document.getElementById('go-link');
+      const s = document.getElementById('go-submit');
+      if (f && s && s.offsetParent && !s.disabled) {
+        clearInterval(t);
+        f.submit();
+      }
+
+      const l = document.querySelector('a.get-link, #get-link');
+      if (l && l.href && l.href.startsWith('http')) {
+        clearInterval(t);
+        location.href = l.href;
+      }
+    }, 1000);
     return;
   }
 
