@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.7
+// @version      1.9.8
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -11,7 +11,7 @@
 // @downloadURL  https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @icon         https://psa.wf/favicon.ico
 // @include      /^https?:\/\/(.*\.)?(cashgrowth\.online|starkroboticsfrc\.com|ravellawfirm\.com)/
-// @include      /^https?:\/\/(.*\.)?(exe\.io|exe-links\.com)/
+// @include      /^https?:\/\/(.*\.)?(exe\.io|exe-links\.com|exeygo\.com)/
 // @include      /^https?:\/\/(mtc\d\.|shortxlinks\.com)/
 // @include      /^https?:\/\/(.*\.)?(shrinkme\.click|themezon\.net|mrproblogger\.com)/
 // @include      /^https?:\/\/(.*\.)?(fc-lc\.xyz|fc\.lc|jobzhub\.store)/
@@ -218,7 +218,7 @@
 
   //== exe.io
   // exe.io & exe-links.com
-  if (/exe\.io|exe-links\.com/.test(host)) {
+  if (/exe\.io|exe-links\.com|exeygo\.com/.test(host)) {
     say('exe');
     window.open = () => { };
     const OSI = setInterval;
