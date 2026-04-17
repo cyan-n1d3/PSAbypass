@@ -15,7 +15,7 @@
 // @include      /^https?:\/\/(mtc\d\.|shortxlinks\.com)/
 // @include      /^https?:\/\/(.*\.)?(shrinkme\.click|themezon\.net|mrproblogger\.com)/
 // @include      /^https?:\/\/(.*\.)?(fc-lc\.xyz|fc\.lc|jobzhub\.store)/
-// @include      /^https?:\/\/(.*\.)?(shrtslug\.biz|digiztechno\.com|tournguide\.com|yrtourguide\.com|techmize\.net|technons\.com)/
+// @include      /^https?:\/\/(.*\.)?(shrtslug\.biz|digiztechno\.com|tournguide\.com|yrtourguide\.com|techmize\.net|technons\.com|biovetro\.net|dailyjobposting\.xyz)/
 // @include      /^https?:\/\/(.*\.)?(tpi\.li|oii\.la)/
 // @include      /^https?:\/\/(.*\.)?(bitcotrade\.net|mobiend\.com|adurl\.io)/
 // @include      /^https?:\/\/(psa\.wf\/goto\/|go2\.pics\/go2|get-to\.link)/
@@ -35,6 +35,14 @@
   });
 
   const say = (...msg) => console.log('[Bypass]', ...msg);
+
+  function spoof() {
+    try {
+      Object.defineProperty(document, 'hidden', { value: false });
+      Object.defineProperty(document, 'visibilityState', { value: 'visible' });
+      Object.defineProperty(document, 'hasFocus', { value: () => true });
+    } catch { }
+  }
 
   //== helpers
   function b64(v) {
@@ -100,7 +108,7 @@
       say('inject redirect');
       try {
         form.submit();
-      } catch {}
+      } catch { }
       return true;
     }
 
@@ -131,48 +139,42 @@
   // cashgrowth bypass
   if (host.includes('cashgrowth.online') || host.includes('starkroboticsfrc.com')) {
     say('success');
-    try {
-        Object.defineProperty(document, 'hidden', { value: false });
-        Object.defineProperty(document, 'visibilityState', { value: 'visible' });
-        Object.defineProperty(document, 'hasFocus', { value: () => true });
-    } catch (err) {
-        console.warn('fail', err);
-    }
+    spoof();
 
     // redirect manual mode
     const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        const response = await originalFetch(...args);
-        
-        try {
-            const url = args[0] instanceof Request ? args[0].url : args[0];
-            if (url && typeof url === 'string' && url.includes('/api/session/')) {
-                const clone = response.clone();
-                clone.json().then(data => {
-                    if (data.redirect) {
-                        console.log('redirect:', data.redirect);
-                        location.replace(data.redirect);
-                    } 
-                    else if (data.data && data.data.finalRedirect) {
-                         console.log('final redirect:', data.data.finalRedirect);
-                         location.replace(data.data.finalRedirect);
-                    }
-                }).catch(e => console.error('JSON parse error', e));
+    window.fetch = async function (...args) {
+      const response = await originalFetch(...args);
+
+      try {
+        const url = args[0] instanceof Request ? args[0].url : args[0];
+        if (url && typeof url === 'string' && url.includes('/api/session/')) {
+          const clone = response.clone();
+          clone.json().then(data => {
+            if (data.redirect) {
+              console.log('redirect:', data.redirect);
+              location.replace(data.redirect);
             }
-        } catch (e) {
-            console.error('error', e);
+            else if (data.data && data.data.finalRedirect) {
+              console.log('final redirect:', data.data.finalRedirect);
+              location.replace(data.data.finalRedirect);
+            }
+          }).catch(e => console.error('JSON parse error', e));
         }
-        
-        return response;
+      } catch (e) {
+        console.error('error', e);
+      }
+
+      return response;
     };
 
     // auto click delete session button
     const loop = setInterval(() => {
-        const btn = document.getElementById('delete-session-btn');
-        if (btn) {
-            say('delete session');
-            btn.click();
-        }
+      const btn = document.getElementById('delete-session-btn');
+      if (btn) {
+        say('delete session');
+        btn.click();
+      }
     }, 500);
     return;
   }
@@ -218,14 +220,14 @@
   // exe.io & exe-links.com
   if (/exe\.io|exe-links\.com/.test(host)) {
     say('exe');
-    window.open = () => {};
+    window.open = () => { };
     const OSI = setInterval;
     window.setInterval = (f, t, ...a) => OSI(f, t === 1e3 ? 100 : t, ...a);
 
     const XHR = XMLHttpRequest.prototype, open = XHR.open, send = XHR.send, set = XHR.setRequestHeader;
-    XHR.open = function(m, u) { this._u = u; this._h = {}; return open.apply(this, arguments); };
-    XHR.setRequestHeader = function(k, v) { this._h[k] = v; return set.apply(this, arguments); };
-    XHR.send = function(b) {
+    XHR.open = function (m, u) { this._u = u; this._h = {}; return open.apply(this, arguments); };
+    XHR.setRequestHeader = function (k, v) { this._h[k] = v; return set.apply(this, arguments); };
+    XHR.send = function (b) {
       this.addEventListener('load', () => {
         if (this._u && this._u.includes('/links/go')) {
           try {
@@ -233,7 +235,7 @@
             if (r.url) location.href = r.url;
             else if (r.message) fetch(this._u, { method: 'POST', headers: { ...this._h, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: b })
               .then(x => x.json()).then(d => d.url && (location.href = d.url));
-          } catch (e) {}
+          } catch (e) { }
         }
       });
       return send.apply(this, arguments);
@@ -243,7 +245,7 @@
     OSI(() => {
       if (!a && document.body) {
         let c = document.createElement('div');
-        Object.assign(c.style, {position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff',padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold'});
+        Object.assign(c.style, { position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold' });
         c.innerText = 'Solve captcha manual';
         document.body.appendChild(c);
         a = true;
@@ -275,30 +277,30 @@
   // shortxlinks (mtc1/mtc2)
   if (/mtc\d/.test(host)) {
     let check = setInterval(() => {
-      const d = s => { try { return JSON.parse(atob(s)); } catch (e) {} };
+      const d = s => { try { return JSON.parse(atob(s)); } catch (e) { } };
       const p = new URLSearchParams(location.search).get('safelink_redirect');
-      
+
       // MTC2 (Direct redirect)
       if (p) {
         const res = d(p);
         if (res && res.safelink) { clearInterval(check); location.href = res.safelink; }
-      } 
+      }
       // MTC1 (Wait & Skip)
       else {
         const e = document.getElementById('value') || document.querySelector('input[name="newwpsafelink"]');
         const v = e ? e.value : window.ad_mem;
-        
+
         if (v && document.body) {
           clearInterval(check);
           const j = d(v);
           if (j && j.linkr) {
             let u = j.linkr, t = (parseInt(j.delay) || 25) + 2; // safest way to not flagged as bot
-            try { u = d(new URL(u).searchParams.get('safelink_redirect')).safelink || u; } catch (e) {}
-            
+            try { u = d(new URL(u).searchParams.get('safelink_redirect')).safelink || u; } catch (e) { }
+
             let c = document.createElement('div');
-            Object.assign(c.style, {position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px'});
+            Object.assign(c.style, { position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px' });
             document.body.appendChild(c);
-            
+
             let i = setInterval(() => {
               c.innerText = `Redirecting in ${t--}s...`;
               if (t < 0) { clearInterval(i); location.href = u; }
@@ -315,15 +317,15 @@
     const X = XMLHttpRequest.prototype;
     const o = X.open;
     const s = X.send;
-    X.open = function(m, u) { this._u = u; return o.apply(this, arguments); };
-    X.send = function(b) {
+    X.open = function (m, u) { this._u = u; return o.apply(this, arguments); };
+    X.send = function (b) {
       this.addEventListener('load', () => {
         try {
           if (this._u && this._u.includes('/links/go')) {
             const r = JSON.parse(this.responseText);
             if (r.url) location.href = r.url;
           }
-        } catch (e) {}
+        } catch (e) { }
       });
       return s.apply(this, arguments);
     };
@@ -366,30 +368,30 @@
     const XHR = XMLHttpRequest.prototype;
     const open = XHR.open;
     const send = XHR.send;
-    XHR.open = function(method, url) {
-        this._u = url;
-        return open.apply(this, arguments);
+    XHR.open = function (method, url) {
+      this._u = url;
+      return open.apply(this, arguments);
     };
-    XHR.send = function(postData) {
-        this.addEventListener('load', () => {
-            if (this._u && this._u.includes('/links/go')) {
-                try {
-                    const r = JSON.parse(this.responseText);
-                    if (r.url) location.href = r.url;
-                } catch(e) {}
-            }
-        });
-        return send.apply(this, arguments);
+    XHR.send = function (postData) {
+      this.addEventListener('load', () => {
+        if (this._u && this._u.includes('/links/go')) {
+          try {
+            const r = JSON.parse(this.responseText);
+            if (r.url) location.href = r.url;
+          } catch (e) { }
+        }
+      });
+      return send.apply(this, arguments);
     };
 
     let a = false;
     const t = setInterval(() => {
       if (!a && document.body) {
-          let c = document.createElement('div');
-          Object.assign(c.style, {position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px'});
-          c.innerText = 'WAIT FOR COUNTDOWN';
-          document.body.appendChild(c);
-          a = true;
+        let c = document.createElement('div');
+        Object.assign(c.style, { position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px' });
+        c.innerText = 'WAIT FOR COUNTDOWN';
+        document.body.appendChild(c);
+        a = true;
       }
 
       const b = document.querySelector('a.get-link, #btn-get-link, #get-link-btn, button#go-submit');
@@ -405,7 +407,7 @@
     const t = setInterval(() => {
       if (!a && document.body) {
         let c = document.createElement('div');
-        Object.assign(c.style, {position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff',padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold'});
+        Object.assign(c.style, { position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold' });
         c.innerText = 'Solve captcha manual';
         document.body.appendChild(c);
         a = true;
@@ -413,15 +415,15 @@
 
       const b = document.getElementById('invisibleCaptchaShortlink');
       const c = document.querySelector('textarea[name="h-captcha-response"]') || document.querySelector('textarea[name="g-recaptcha-response"]');
-      
+
       if (b && c) {
         if (c.value.length > 10) {
-            clearInterval(t);
-            say('Captcha solved, submitting');
-            b.disabled = 0;
-            b.click();
+          clearInterval(t);
+          say('Captcha solved, submitting');
+          b.disabled = 0;
+          b.click();
         }
-        return; 
+        return;
       }
 
       const m = document.documentElement.innerHTML.match(/REDIRECT_URL\s*=\s*"([^"]+)"/);
@@ -437,14 +439,14 @@
   }
 
   //== shrtslug and others
-  // shrtslug / digiztechno / tournguide / techmize / technons
-  if (/shrtslug|digiztechno|tournguide|techmize|technons|yrtourguide/.test(host)) {
+  // shrtslug / digiztechno / tournguide / techmize / technons / biovetro / dailyjobposting
+  if (/shrtslug|digiztechno|tournguide|techmize|technons|yrtourguide|biovetro|dailyjobposting/.test(host)) {
     say('shrtslug');
     let s = document.createElement('style');
     s.innerHTML = '#warning_area{display:none!important}#main_area{display:block!important}';
     document.head.appendChild(s);
-    try { Object.defineProperty(window, 'abwn', {value:()=>{}, writable:false}); } catch(e){}
-    new MutationObserver(m => m.forEach(n => { if(n.addedNodes[0]?.id==='main_area') n.addedNodes[0].remove=()=>{}; })).observe(document, {childList:true, subtree:true});
+    try { Object.defineProperty(window, 'abwn', { value: () => { }, writable: false }); } catch (e) { }
+    new MutationObserver(m => m.forEach(n => { if (n.addedNodes[0]?.id === 'main_area') n.addedNodes[0].remove = () => { }; })).observe(document, { childList: true, subtree: true });
 
     const t = setInterval(() => {
       let f = document.querySelector('div[id$="_final"] a, div[id$="_final"] button');
@@ -464,13 +466,13 @@
       let m = document.documentElement.innerHTML.match(/aHR0c[a-zA-Z0-9+/=]+(?<!=)/);
       if (m) {
         let d = atob(m[0]);
-        if (d.includes('http') && !d.includes(location.hostname)) { 
-            clearInterval(t); location.href = d; return; 
+        if (d.includes('http') && !d.includes(location.hostname)) {
+          clearInterval(t); location.href = d; return;
         }
       }
 
       let c = document.querySelector('input[name="cf-turnstile-response"]'),
-          b = document.querySelector('#continue, button[type="submit"]');
+        b = document.querySelector('#continue, button[type="submit"]');
       if (c && c.value && b) { clearInterval(t); b.click(); }
     }, 500);
     return;
@@ -481,14 +483,14 @@
     say('bitcotrade');
     const X = XMLHttpRequest.prototype, o = X.open, s = X.send;
     let a = false, c;
-    X.open = function(m, u) { this._u = u; return o.apply(this, arguments); };
-    X.send = function(b) {
+    X.open = function (m, u) { this._u = u; return o.apply(this, arguments); };
+    X.send = function (b) {
       this.addEventListener('load', () => {
         if (this._u && this._u.includes('/links/go')) {
           try {
             const r = JSON.parse(this.responseText);
             if (r.url) location.href = r.url;
-          } catch(e) {}
+          } catch (e) { }
         }
       });
       return s.apply(this, arguments);
@@ -502,10 +504,10 @@
       }
       if (/adurl\.io/.test(host) && !a && document.body) {
         c = document.createElement('div');
-        Object.assign(c.style, {position:'fixed', top:'300px', left:'50%', transform:'translateX(-50%)', zIndex:'2147483647', background:'#b21d1dff', color:'#fff', padding:'10px', fontSize:'24px', textAlign:'center', fontWeight:'bold', borderRadius:'4px'});
+        Object.assign(c.style, { position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px' });
         c.innerText = 'WAIT FOR COUNTDOWN';
         document.body.appendChild(c);
-        a = true; clearInterval(t); 
+        a = true; clearInterval(t);
       }
     }, 500);
     return;
@@ -515,11 +517,11 @@
   if (host === 'get-to.link') {
     say('tada');
     const t = setInterval(() => {
-        const b = document.querySelector('a.btn.btn-primary, a.btn.btn-secondary, a.get-link');
-        if (b && b.href && b.href.startsWith('http')) { 
-            clearInterval(t); 
-            location.href = b.href; 
-        }
+      const b = document.querySelector('a.btn.btn-primary, a.btn.btn-secondary, a.get-link');
+      if (b && b.href && b.href.startsWith('http')) {
+        clearInterval(t);
+        location.href = b.href;
+      }
     }, 500);
     return;
   }
