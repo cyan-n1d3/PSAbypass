@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         psa.wf bypass shorlink
 // @namespace    https://github.com/cyan-n1d3/PSAbypass
-// @version      1.9.9
+// @version      2.0.0
 // @description  bypass and autoredirect shortlink for web psa.wf.
 // @author       cyan-n1d3
 // @homepage     https://github.com/cyan-n1d3/PSAbypass
@@ -87,6 +87,44 @@
       location.replace(dec);
       return;
     }
+  }
+
+  function hXHR(cb, path) {
+    const X = XMLHttpRequest.prototype, o = X.open, s = X.send, h = X.setRequestHeader;
+    X.open = function (m, u) { this._u = u; this._h = {}; return o.apply(this, arguments); };
+    X.setRequestHeader = function (k, v) { this._h[k] = v; return h.apply(this, arguments); };
+    X.send = function (b) {
+      this.addEventListener('load', () => {
+        if (this._u && this._u.includes(path)) {
+          try {
+            const r = JSON.parse(this.responseText);
+            cb(r, b, this._u, this._h);
+          } catch (e) { }
+        }
+      });
+      return s.apply(this, arguments);
+    };
+  }
+
+  function sUI(t) {
+    let c = document.getElementById('psa-ui');
+    if (!c) {
+      c = document.createElement('div');
+      c.id = 'psa-ui';
+      Object.assign(c.style, { position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold' });
+      document.body ? document.body.appendChild(c) : document.addEventListener('DOMContentLoaded', () => document.body.appendChild(c), { once: true });
+    }
+    c.innerText = t;
+  }
+
+  function wBtn(s, f, i = 500) {
+    const t = setInterval(() => {
+      const e = document.querySelector(s);
+      if (e && e.offsetParent && !e.disabled) {
+        if (f(e) !== false) clearInterval(t);
+      }
+    }, i);
+    return t;
   }
 
   //== start here
@@ -217,50 +255,25 @@
   }
 
   //== exe.io
-  // exe.io & exe-links.com
   if (/exe\.io|exe-links\.com|exeygo\.com/.test(host)) {
     say('exe');
     window.open = () => { };
     const OSI = setInterval;
     window.setInterval = (f, t, ...a) => OSI(f, t === 1e3 ? 100 : t, ...a);
 
-    const XHR = XMLHttpRequest.prototype, open = XHR.open, send = XHR.send, set = XHR.setRequestHeader;
-    XHR.open = function (m, u) { this._u = u; this._h = {}; return open.apply(this, arguments); };
-    XHR.setRequestHeader = function (k, v) { this._h[k] = v; return set.apply(this, arguments); };
-    XHR.send = function (b) {
-      this.addEventListener('load', () => {
-        if (this._u && this._u.includes('/links/go')) {
-          try {
-            const r = JSON.parse(this.responseText);
-            if (r.url) location.href = r.url;
-            else if (r.message) fetch(this._u, { method: 'POST', headers: { ...this._h, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: b })
-              .then(x => x.json()).then(d => d.url && (location.href = d.url));
-          } catch (e) { }
-        }
-      });
-      return send.apply(this, arguments);
-    };
+    hXHR((r, b, u, h) => {
+      if (r.url) location.href = r.url;
+      else if (r.message) fetch(u, { method: 'POST', headers: { ...h, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: b })
+        .then(x => x.json()).then(d => d.url && (location.href = d.url));
+    }, '/links/go');
 
-    let a = false;
-    OSI(() => {
-      if (!a && document.body) {
-        let c = document.createElement('div');
-        Object.assign(c.style, { position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold' });
-        c.innerText = 'Solve captcha manual';
-        document.body.appendChild(c);
-        a = true;
-      }
-
-      const b = document.querySelector('#before-captcha .button, button.link-button');
-      if (b && b.innerText.includes("Continue")) b.click();
-      const c = document.querySelector('#g-recaptcha-response');
-      if (c && c.value.length > 20) (document.getElementById('link-view') || document.forms[0]).submit();
-
-      const btn = document.getElementById('invisibleCaptchaShortlink');
-      if (btn && !btn.disabled) {
-        btn.click();
-      }
-    }, 500);
+    wBtn('#before-captcha .button, button.link-button', b => b.innerText.includes('Continue') && b.click());
+    wBtn('#invisibleCaptchaShortlink', b => b.click());
+    wBtn('#g-recaptcha-response', c => {
+      if (c.value.length > 20) { (document.getElementById('link-view') || document.forms[0]).submit(); return true; }
+      sUI('Solve captcha manual');
+      return false;
+    });
     return;
   }
 
@@ -273,63 +286,36 @@
     return;
   }
 
-  //== shortxlinks
-  // shortxlinks (mtc1/mtc2)
+  //== shortxlinks (seems removed from psa)
   if (/mtc\d/.test(host)) {
     let check = setInterval(() => {
       const d = s => { try { return JSON.parse(atob(s)); } catch (e) { } };
       const p = new URLSearchParams(location.search).get('safelink_redirect');
 
-      // MTC2 (Direct redirect)
       if (p) {
         const res = d(p);
         if (res && res.safelink) { clearInterval(check); location.href = res.safelink; }
-      }
-      // MTC1 (Wait & Skip)
-      else {
+      } else {
         const e = document.getElementById('value') || document.querySelector('input[name="newwpsafelink"]');
         const v = e ? e.value : window.ad_mem;
-
         if (v && document.body) {
           clearInterval(check);
           const j = d(v);
           if (j && j.linkr) {
-            let u = j.linkr, t = (parseInt(j.delay) || 25) + 2; // safest way to not flagged as bot
+            let u = j.linkr, t = (parseInt(j.delay) || 25) + 2;
             try { u = d(new URL(u).searchParams.get('safelink_redirect')).safelink || u; } catch (e) { }
-
-            let c = document.createElement('div');
-            Object.assign(c.style, { position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px' });
-            document.body.appendChild(c);
-
             let i = setInterval(() => {
-              c.innerText = `Redirecting in ${t--}s...`;
+              sUI(`Redirecting in ${t--}s...`);
               if (t < 0) { clearInterval(i); location.href = u; }
             }, 1000);
           }
         }
       }
-    }, 500); // Check every 0.5s
+    }, 500);
     return;
   }
 
-  // shortxlinks final redirect
-  if (host.includes('shortxlinks')) {
-    const X = XMLHttpRequest.prototype;
-    const o = X.open;
-    const s = X.send;
-    X.open = function (m, u) { this._u = u; return o.apply(this, arguments); };
-    X.send = function (b) {
-      this.addEventListener('load', () => {
-        try {
-          if (this._u && this._u.includes('/links/go')) {
-            const r = JSON.parse(this.responseText);
-            if (r.url) location.href = r.url;
-          }
-        } catch (e) { }
-      });
-      return s.apply(this, arguments);
-    };
-  }
+  if (host.includes('shortxlinks')) hXHR(r => r.url && (location.href = r.url), '/links/go');
 
   //== shrinkme
   // shrinkme
@@ -365,75 +351,28 @@
   // mrproblogger
   if (/mrproblogger\.com/.test(host)) {
     say('mrproblogger');
-    const XHR = XMLHttpRequest.prototype;
-    const open = XHR.open;
-    const send = XHR.send;
-    XHR.open = function (method, url) {
-      this._u = url;
-      return open.apply(this, arguments);
-    };
-    XHR.send = function (postData) {
-      this.addEventListener('load', () => {
-        if (this._u && this._u.includes('/links/go')) {
-          try {
-            const r = JSON.parse(this.responseText);
-            if (r.url) location.href = r.url;
-          } catch (e) { }
-        }
-      });
-      return send.apply(this, arguments);
-    };
-
-    let a = false;
-    const t = setInterval(() => {
-      if (!a && document.body) {
-        let c = document.createElement('div');
-        Object.assign(c.style, { position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px' });
-        c.innerText = 'WAIT FOR COUNTDOWN';
-        document.body.appendChild(c);
-        a = true;
-      }
-
-      const b = document.querySelector('a.get-link, #btn-get-link, #get-link-btn, button#go-submit');
-      if (b && b.offsetParent && !b.disabled) { clearInterval(t); b.click(); }
-    }, 1000);
+    hXHR(r => r.url && (location.href = r.url), '/links/go');
+    wBtn('a.get-link, #btn-get-link, #get-link-btn, button#go-submit', b => b.click(), 1000);
+    sUI('WAIT FOR COUNTDOWN');
     return;
   }
 
   //== fc.lc
   if (/fc-lc|fc\.lc|jobzhub/.test(host)) {
     say('fc.lc');
-    let a = false;
     const t = setInterval(() => {
-      if (!a && document.body) {
-        let c = document.createElement('div');
-        Object.assign(c.style, { position: 'fixed', top: '0', left: '0', width: '100%', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold' });
-        c.innerText = 'Solve captcha manual';
-        document.body.appendChild(c);
-        a = true;
-      }
-
-      const b = document.getElementById('invisibleCaptchaShortlink');
-      const c = document.querySelector('textarea[name="h-captcha-response"]') || document.querySelector('textarea[name="g-recaptcha-response"]');
-
+      const b = document.getElementById('invisibleCaptchaShortlink'), c = document.querySelector('textarea[name$="captcha-response"]');
       if (b && c) {
-        if (c.value.length > 10) {
-          clearInterval(t);
-          say('Captcha solved, submitting');
-          b.disabled = 0;
-          b.click();
-        }
+        if (c.value.length > 10) { clearInterval(t); b.disabled = 0; b.click(); }
+        else sUI('Solve captcha manual');
         return;
       }
-
       const m = document.documentElement.innerHTML.match(/REDIRECT_URL\s*=\s*"([^"]+)"/);
       if (m) { clearInterval(t); location.replace(m[1]); return; }
-
       const f = document.querySelector('input[name="fdata"]');
       if (f) { clearInterval(t); fetch('?start_countdown=1').then(r => r.json()).then(d => { f.value = d.rand; f.closest('form').submit(); }); return; }
-
       const f12 = document.getElementById('form12');
-      if (f12) { clearInterval(t); fetch('https://fc.lc/links/go', { method: 'POST', body: new FormData(f12) }).then(r => r.json()).then(d => { if (d.url) location.href = d.url; }); }
+      if (f12) { clearInterval(t); fetch('https://fc.lc/links/go', { method: 'POST', body: new FormData(f12) }).then(r => r.json()).then(d => d.url && (location.href = d.url)); }
     }, 500);
     return;
   }
@@ -478,38 +417,12 @@
     return;
   }
 
-  //== bitcotrade, mobiend, adurl
+  //== bitcotrade, mobiend, adurl (seems removed from psa)
   if (/bitcotrade\.net|mobiend\.com|adurl\.io/.test(host)) {
     say('bitcotrade');
-    const X = XMLHttpRequest.prototype, o = X.open, s = X.send;
-    let a = false, c;
-    X.open = function (m, u) { this._u = u; return o.apply(this, arguments); };
-    X.send = function (b) {
-      this.addEventListener('load', () => {
-        if (this._u && this._u.includes('/links/go')) {
-          try {
-            const r = JSON.parse(this.responseText);
-            if (r.url) location.href = r.url;
-          } catch (e) { }
-        }
-      });
-      return s.apply(this, arguments);
-    };
-    const t = setInterval(() => {
-      const btn = document.getElementById('go_d');
-      if (btn && btn.href) {
-        clearInterval(t);
-        say('redirecting');
-        location.href = btn.href;
-      }
-      if (/adurl\.io/.test(host) && !a && document.body) {
-        c = document.createElement('div');
-        Object.assign(c.style, { position: 'fixed', top: '300px', left: '50%', transform: 'translateX(-50%)', zIndex: '2147483647', background: '#b21d1dff', color: '#fff', padding: '10px', fontSize: '24px', textAlign: 'center', fontWeight: 'bold', borderRadius: '4px' });
-        c.innerText = 'WAIT FOR COUNTDOWN';
-        document.body.appendChild(c);
-        a = true; clearInterval(t);
-      }
-    }, 500);
+    hXHR(r => r.url && (location.href = r.url), '/links/go');
+    wBtn('#go_d', b => b.href && b.href.startsWith('http') && (location.href = b.href));
+    if (host.includes('adurl.io')) sUI('WAIT FOR COUNTDOWN');
     return;
   }
 
