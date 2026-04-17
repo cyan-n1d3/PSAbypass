@@ -10,7 +10,7 @@
 // @updateURL    https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @downloadURL  https://github.com/cyan-n1d3/PSAbypass/raw/main/psa.wf-bypass.js
 // @icon         https://psa.wf/favicon.ico
-// @include      /^https?:\/\/(.*\.)?(cashgrowth\.online|ravellawfirm\.com)/
+// @include      /^https?:\/\/(.*\.)?(cashgrowth\.online|starkroboticsfrc\.com|ravellawfirm\.com)/
 // @include      /^https?:\/\/(.*\.)?(exe\.io|exe-links\.com)/
 // @include      /^https?:\/\/(mtc\d\.|shortxlinks\.com)/
 // @include      /^https?:\/\/(.*\.)?(shrinkme\.click|themezon\.net|mrproblogger\.com)/
@@ -129,7 +129,7 @@
 
   //== cashgrowth
   // cashgrowth bypass
-  if (host.includes('cashgrowth.online')) {
+  if (host.includes('cashgrowth.online') || host.includes('starkroboticsfrc.com')) {
     say('success');
     try {
         Object.defineProperty(document, 'hidden', { value: false });
